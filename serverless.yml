@@ -1,0 +1,77 @@
+service: serverless-azure
+
+frameworkVersion: '3'
+
+provider:
+  name: azure
+  region: ${self:provider.environment.REGION}
+  stage: ${self:provider.environment.STAGE}
+  runtime: nodejs18
+  subscriptionId: ${self:provider.environment.SUBSCRIPTION_ID}
+  environment: 
+    REGION: ${file(env.yml):${opt:stage}.region}
+    STAGE: ${file(env.yml):${opt:stage}.stage}
+    SUBSCRIPTION_ID: ${file(env.yml):${opt:stage}.subscriptionId}
+    
+  # you can define apim configuration here
+  # apim:
+  #   apis:
+  #     - name: v1
+  #       subscriptionRequired: false # if true must provide an api key
+  #       displayName: v1
+  #       description: V1 sample app APIs
+  #       protocols:
+  #         - https
+  #       path: v1
+  #       tags:
+  #         - tag1
+  #         - tag2
+  #       authorization: none
+  #   cors:
+  #     allowCredentials: false
+  #     allowedOrigins:
+  #       - "*"
+  #     allowedMethods:
+  #       - GET
+  #       - POST
+  #       - PUT
+  #       - DELETE
+  #       - PATCH
+  #     allowedHeaders:
+  #       - "*"
+  #     exposeHeaders:
+  #       - "*"
+
+plugins: 
+  - serverless-azure-functions
+
+package:
+  patterns:
+    # - '!exclude-me.js'
+    # - '!exclude-me-dir/**'
+    - '!local.settings.json'
+    - '!.vscode/**'
+    # - include-me.js
+    # - include-me-dir/**
+
+functions:
+  hello:
+    handler: src/handlers/hello.sayHello
+    events:
+      - http: true
+        methods:
+          - GET
+        authLevel: anonymous 
+
+  goodbye:
+    handler: src/handlers/goodbye.sayGoodbye
+    events:
+      - http: true
+        methods:
+          - GET
+        authLevel: function
+
+
+# Manually update the app settings due to serverless v4 is only support on AWS
+# az functionapp config appsettings set --settings FUNCTIONS_EXTENSION_VERSION=~4 -g "Your Resource Group Name"  -n  "Your Function App Name"
+  
