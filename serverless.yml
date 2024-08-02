@@ -12,6 +12,8 @@ provider:
     REGION: ${file(env.yml):${opt:stage}.region}
     STAGE: ${file(env.yml):${opt:stage}.stage}
     SUBSCRIPTION_ID: ${file(env.yml):${opt:stage}.subscriptionId}
+    RESOURCE_GROUP_NAME: ${file(env.yml):${opt:stage}.resourceGroupName}
+    FUNCTION_APP_NAME: ${file(env.yml):${opt:stage}.functionAppName}
     
   # you can define apim configuration here
   # apim:
@@ -44,6 +46,7 @@ provider:
 
 plugins: 
   - serverless-azure-functions
+  - serverless-scriptable-plugin
 
 package:
   patterns:
@@ -56,7 +59,7 @@ package:
 
 functions:
   hello:
-    handler: src/handlers/hello.sayHello
+    handler: route.hello
     events:
       - http: true
         methods:
@@ -64,12 +67,18 @@ functions:
         authLevel: anonymous 
 
   goodbye:
-    handler: src/handlers/goodbye.sayGoodbye
+    handler: route.goodbye
     events:
       - http: true
         methods:
           - GET
         authLevel: function
+
+custom:
+  scriptable:
+    hooks:
+      after:deploy:deploy: 
+        - az functionapp config appsettings set --settings FUNCTIONS_EXTENSION_VERSION=~4 -g ${self:provider.environment.RESOURCE_GROUP_NAME} -n ${self:provider.environment.FUNCTION_APP_NAME}
 
 
 # Manually update the app settings due to serverless v4 is only support on AWS
